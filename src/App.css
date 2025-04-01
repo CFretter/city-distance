@@ -185,6 +185,7 @@ button:disabled {
 .cities-table table {
   width: 100%;
   border-collapse: collapse;
+  color: #333;
 }
 
 .cities-table th,
@@ -192,6 +193,7 @@ button:disabled {
   padding: 8px 12px;
   text-align: left;
   border-bottom: 1px solid #dee2e6;
+  color: #333;
 }
 
 .cities-table th {
