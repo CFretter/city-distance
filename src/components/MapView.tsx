@@ -1,7 +1,7 @@
 import { MapContainer, TileLayer, Marker, Circle, useMap } from 'react-leaflet'
 import { useEffect } from 'react'
 import 'leaflet/dist/leaflet.css'
-import { Icon } from 'leaflet'
+import { Icon, LatLngBounds, LatLng } from 'leaflet'
 import { City } from '../types'
 
 // Fix for default marker icon
@@ -19,13 +19,43 @@ const cityIcon = new Icon({
   className: 'city-marker'
 })
 
-// Component to handle map center updates
-function MapUpdater({ center }: { center: { lat: number; lng: number } }) {
+// Component to handle map bounds updates
+function MapUpdater({ center, cities, radius }: { 
+  center: { lat: number; lng: number }, 
+  cities: City[],
+  radius: number 
+}) {
   const map = useMap()
   
   useEffect(() => {
-    map.setView([center.lat, center.lng])
-  }, [center, map])
+    // Create bounds that include the center point
+    const bounds = new LatLngBounds(
+      new LatLng(center.lat, center.lng),
+      new LatLng(center.lat, center.lng)
+    )
+
+    // Extend bounds to include all cities
+    cities.forEach(city => {
+      bounds.extend(new LatLng(city.lat, city.lon))
+    })
+
+    // Extend bounds to include the circle radius
+    const radiusInDegrees = radius / 111.32 // Approximate degrees for the radius
+    bounds.extend([
+      center.lat + radiusInDegrees,
+      center.lng + radiusInDegrees
+    ])
+    bounds.extend([
+      center.lat - radiusInDegrees,
+      center.lng - radiusInDegrees
+    ])
+
+    // Fit the map to the bounds with some padding
+    map.fitBounds(bounds, {
+      padding: [50, 50],
+      maxZoom: 11
+    })
+  }, [map, center, cities, radius])
   
   return null
 }
@@ -37,14 +67,14 @@ interface MapViewProps {
   cities: City[];
 }
 
-function MapView({ center, radius, zoom = 10, cities }: MapViewProps) {
+function MapView({ center, radius, cities }: MapViewProps) {
   const radiusInMeters = radius * 1000;
 
   return (
     <div className="map-container">
       <MapContainer
         center={[center.lat, center.lng]}
-        zoom={zoom}
+        zoom={8}
         style={{ height: '100%', width: '100%' }}
         scrollWheelZoom={true}
       >
@@ -74,7 +104,7 @@ function MapView({ center, radius, zoom = 10, cities }: MapViewProps) {
           >
           </Marker>
         ))}
-        <MapUpdater center={center} />
+        <MapUpdater center={center} cities={cities} radius={radius} />
       </MapContainer>
     </div>
   )
