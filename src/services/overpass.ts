@@ -4,16 +4,21 @@ interface City {
   lat: number;
   lon: number;
   distance: number;
+  type?: string;
 }
 
-export async function findNearbyCities(center: { lat: number; lng: number }, targetDistanceKm: number): Promise<City[]> {
-  // Set wider search radius to filter later
-  const searchRadius = targetDistanceKm * 1.2; // Search a bit wider than needed
+export async function findNearbyCities(
+  center: { lat: number; lng: number }, 
+  targetDistanceKm: number,
+  citiesOnly: boolean
+): Promise<City[]> {
+  // Use citiesOnly to determine which place types to query
+  const placeTypes = citiesOnly ? "city|town" : "city|town|village";
   
   const query = `
     [out:json][timeout:25];
     (
-      node["place"~"city|town|village"]["name"](around:${searchRadius * 1000},${center.lat},${center.lng});
+      node["place"~"${placeTypes}"]["name"](around:${targetDistanceKm * 1000},${center.lat},${center.lng});
     );
     out body;
   `.trim();
@@ -63,12 +68,12 @@ export async function findNearbyCities(center: { lat: number; lng: number }, tar
         };
       })
       // Filter cities that are between 0.9 and 1.1 times the target distance
-      .filter(city => {
+      .filter((city: City) => {
         const minDistance = targetDistanceKm * 0.9;
         const maxDistance = targetDistanceKm * 1.1;
         return city.distance >= minDistance && city.distance <= maxDistance;
       })
-      .sort((a, b) => {
+      .sort((a: City, b: City) => {
         // Sort by how close they are to the exact target distance
         const aDiff = Math.abs(a.distance - targetDistanceKm);
         const bDiff = Math.abs(b.distance - targetDistanceKm);

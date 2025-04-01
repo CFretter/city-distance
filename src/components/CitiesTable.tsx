@@ -1,10 +1,4 @@
-interface City {
-  id: number;
-  name: string;
-  lat: number;
-  lon: number;
-  distance: number;
-}
+import { City } from '../types'
 
 interface CitiesTableProps {
   cities: City[];
@@ -45,8 +39,8 @@ function CitiesTable({ cities, isLoading, targetDistance }: CitiesTableProps) {
                 
                 return (
                   <tr key={city.id}>
-                    <td>{city.name || 'Unknown'}</td>
-                    <td>{city.distance?.toFixed(1) || '0'} km</td>
+                    <td>{city.name}</td>
+                    <td>{city.distance.toFixed(1)} km</td>
                     <td className={deviationClass}>{deviation}%</td>
                   </tr>
                 );

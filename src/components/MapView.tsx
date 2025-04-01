@@ -1,7 +1,8 @@
-import { MapContainer, TileLayer, Marker, Circle, useMap, Popup } from 'react-leaflet'
+import { MapContainer, TileLayer, Marker, Circle, useMap } from 'react-leaflet'
 import { useEffect } from 'react'
 import 'leaflet/dist/leaflet.css'
 import { Icon } from 'leaflet'
+import { City } from '../types'
 
 // Fix for default marker icon
 const defaultIcon = new Icon({
@@ -9,6 +10,13 @@ const defaultIcon = new Icon({
   shadowUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-shadow.png',
   iconSize: [25, 41],
   iconAnchor: [12, 41]
+})
+
+const cityIcon = new Icon({
+  iconUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon.png',
+  iconSize: [20, 32],
+  iconAnchor: [10, 32],
+  className: 'city-marker'
 })
 
 // Component to handle map center updates
@@ -22,14 +30,6 @@ function MapUpdater({ center }: { center: { lat: number; lng: number } }) {
   return null
 }
 
-interface City {
-  id: number;
-  name: string;
-  lat: number;
-  lon: number;
-  distance: number;
-}
-
 interface MapViewProps {
   center: { lat: number; lng: number };
   radius: number;
@@ -37,15 +37,7 @@ interface MapViewProps {
   cities: City[];
 }
 
-const cityIcon = new Icon({
-  iconUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon.png',
-  iconSize: [20, 32],
-  iconAnchor: [10, 32],
-  className: 'city-marker'
-});
-
 function MapView({ center, radius, zoom = 10, cities }: MapViewProps) {
-  // Convert kilometers to meters for the circle radius
   const radiusInMeters = radius * 1000;
 
   return (
@@ -64,7 +56,6 @@ function MapView({ center, radius, zoom = 10, cities }: MapViewProps) {
           position={[center.lat, center.lng]} 
           icon={defaultIcon}
         >
-          <Popup>Search Center</Popup>
         </Marker>
         <Circle
           center={[center.lat, center.lng]}
@@ -81,10 +72,6 @@ function MapView({ center, radius, zoom = 10, cities }: MapViewProps) {
             position={[city.lat, city.lon]}
             icon={cityIcon}
           >
-            <Popup>
-              {city.name}<br/>
-              Distance: {city.distance.toFixed(1)} km
-            </Popup>
           </Marker>
         ))}
         <MapUpdater center={center} />

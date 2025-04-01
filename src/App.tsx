@@ -1,18 +1,11 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import InputPanel from './components/InputPanel'
 import MapView from './components/MapView'
 import CitiesTable from './components/CitiesTable'
 import { geocodeLocation } from './services/geocoding'
 import { findNearbyCities } from './services/overpass'
+import { City } from './types'
 import './App.css'
-
-interface City {
-  id: number;
-  name: string;
-  lat: number;
-  lon: number;
-  distance: number;
-}
 
 function App() {
   const [mapState, setMapState] = useState({
@@ -26,12 +19,12 @@ function App() {
   const [citiesLoading, setCitiesLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
-  const handleExecute = async (location: string, distance: number) => {
+  const handleExecute = async (location: string, distance: number, citiesOnly: boolean) => {
     try {
       setLoading(true)
       setCitiesLoading(true)
       setError(null)
-      setCities([]) // Clear previous results
+      setCities([])
       
       const result = await geocodeLocation(location)
       const coordinates = `${result.lat.toFixed(4)}°${result.lat >= 0 ? 'N' : 'S'}, ${result.lng.toFixed(4)}°${result.lng >= 0 ? 'E' : 'W'}`
@@ -43,9 +36,11 @@ function App() {
         coordinates: coordinates
       })
 
-      // Debug log before setting cities
-      const nearbyCities = await findNearbyCities({ lat: result.lat, lng: result.lng }, distance)
-      console.log('Setting cities in App:', nearbyCities)
+      const nearbyCities = await findNearbyCities(
+        { lat: result.lat, lng: result.lng }, 
+        distance,
+        citiesOnly
+      )
       setCities(nearbyCities)
       
     } catch (error) {
@@ -56,13 +51,9 @@ function App() {
     }
   }
 
-  // Initialize with Kuala Lumpur on first load
-  useState(() => {
-    handleExecute('Kuala Lumpur, Malaysia', 56)
+  useEffect(() => {
+    handleExecute('Kuala Lumpur, Malaysia', 56, true)
   }, [])
-
-  // Debug log in render
-  console.log('App render - cities:', cities)
 
   return (
     <div className="app-container">
